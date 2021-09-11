@@ -101,23 +101,3 @@ void addChildren(int num, Node *parent, ...)
     parent->nrChildren = num;
     va_end(ap);
 }
-
-/* int main()
-{
-    Node *head = create_node("2");
-    Node **C = new Node *[3];
-    C[0] = create_node("3");
-    C[1] = create_node("4");
-    C[2] = create_node("5");
-    head->children = C;
-    head->nrChildren = 3;
-    C = new Node *[4];
-    C[0] = head;
-    C[1] = create_node("6");
-    C[2] = create_node("7");
-    C[3] = create_node("8");
-    head = create_node("1");
-    head->children = C;
-    head->nrChildren = 4;
-    PreOrderTraverse(head);
-} */
