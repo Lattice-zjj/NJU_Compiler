@@ -5,7 +5,7 @@
     #include "myTree.h"
     #define YYSTYPE Node*
     #include "syntax.tab.h"
-    //#define MDEBUG 
+    #define MDEBUG 
     #define CREATELEXNODE(tokenName) \
         yylval = createNode(#tokenName, yylloc.first_line,ENUM_LEX_##tokenName); 
     int nrLexicalError = 0;
@@ -19,21 +19,14 @@
         yylloc.first_column = yycolumn; \
         yylloc.last_column = yycolumn + yyleng - 1; \
         yycolumn += yyleng;
-    void print4Debug(char *str){
+    void PrintInfo(char *str){
         #ifdef MDEBUG
         printf("[%3d] %10s: %-s\n", yylineno, str, yytext);
         #endif
     }
-    void printError(){
-        printf("Error type A at Line %d: Mysterious characters \"%s\".\n",yylineno, yytext);
+    void PrintError(char *str){
+        printf("Error type A at Line %d: Illegal %s: \"%s\".\n",yylineno,str, yytext);
         nrLexicalError++;
-    }
-    char* up2low(char *str){
-        for(int i=0;i<strlen(str);i++){
-            if(str[i]>='A' && str[i] <= 'Z')
-                str[i] += 'a'-'A';
-        }
-        return str;
     }
 %}
 %option yylineno
@@ -42,6 +35,8 @@ digit                             [0-9]
 digits                            {digit}+
 letter_                           [a-zA-Z_]
 DEC                               0|([1-9][0-9]*)
+OCT                               0([1-7][0-7]*)
+HEX                               0x([1-9A-F][0-9A-F]*)
 RELOP                             ">"|"<"|">="|"<="|"=="|"!="
 TYPE                              int|float
 LP                                "("
@@ -57,97 +52,117 @@ WhiteSpace                        [ \t\r\n]+
 
 %%
 
-"//".*                          {print4Debug("Some Comment");}
-"struct"                        {   print4Debug("STRUCT");     
+"//"                            {
+                                    char c = input();
+                                    while (c != '\n') c = input();
+                                }
+"/*"                            {
+                                    char c = input();
+                                    char pre;
+                                    while (!(pre == '*' && c == '/')) {
+                                        pre = c;
+                                        c = input();
+                                    }
+                                }
+"struct"                        {   PrintInfo("STRUCT");     
                                     CREATELEXNODE(STRUCT)
                                     return STRUCT;      }
-"return"                        {   print4Debug("RETURN");                
+"return"                        {   PrintInfo("RETURN");                
                                     CREATELEXNODE(RETURN)
                                     return RETURN;      }
-"if"                            {   print4Debug("IF");                    
+"if"                            {   PrintInfo("IF");                    
                                     CREATELEXNODE(IF)
                                     return IF;          }
-"else"                          {   print4Debug("ELSE");                  
+"else"                          {   PrintInfo("ELSE");                  
                                     CREATELEXNODE(ELSE)
                                     return ELSE;        }
-"while"                         {   print4Debug("WHILE");                 
+"while"                         {   PrintInfo("WHILE");                 
                                     CREATELEXNODE(WHILE)
                                     return WHILE;       }
-";"                             {   print4Debug("SEMI");                  
+";"                             {   PrintInfo("SEMI");                  
                                     CREATELEXNODE(SEMI)
                                     return SEMI;        }
-","                             {   print4Debug("COMMA");                 
+","                             {   PrintInfo("COMMA");                 
                                     CREATELEXNODE(COMMA)
                                     return COMMA;       }
-"="                             {   print4Debug("ASSIGNOP");              
+"="                             {   PrintInfo("ASSIGNOP");              
                                     CREATELEXNODE(ASSIGNOP)
                                     return ASSIGNOP;    }
-{RELOP}                         {   print4Debug("RELOP");                 
+{RELOP}                         {   PrintInfo("RELOP");                 
                                     CREATELEXNODE(RELOP)
                                     return RELOP;       }
-"+"                             {   print4Debug("PLUS");                  
+"+"                             {   PrintInfo("PLUS");                  
                                     CREATELEXNODE(PLUS)
                                     return PLUS;        }
-"-"                             {   print4Debug("MINUS");                 
+"-"                             {   PrintInfo("MINUS");                 
                                     CREATELEXNODE(MINUS)
                                     return MINUS;       }
-"*"                             {   print4Debug("STAR");                  
+"*"                             {   PrintInfo("STAR");                  
                                     CREATELEXNODE(STAR)
                                     return STAR;        }
-"/"                             {   print4Debug("DIV");                   
+"/"                             {   PrintInfo("DIV");                   
                                     CREATELEXNODE(DIV)
                                     return DIV;         }
-"&&"                            {   print4Debug("AND");                   
+"&&"                            {   PrintInfo("AND");                   
                                     CREATELEXNODE(AND)
                                     return AND;         }
-"||"                            {   print4Debug("OR");                    
+"||"                            {   PrintInfo("OR");                    
                                     CREATELEXNODE(OR)
                                     return OR;          }
-"."                             {   print4Debug("DOT");                   
+"."                             {   PrintInfo("DOT");                   
                                     CREATELEXNODE(DOT)
                                     return DOT;         }
-"!"                             {   print4Debug("NOT");                   
+"!"                             {   PrintInfo("NOT");                   
                                     CREATELEXNODE(NOT)
                                     return NOT;         }
-{TYPE}                          {   print4Debug("TYPE");                  
+{TYPE}                          {   PrintInfo("TYPE");                  
                                     CREATELEXNODE(TYPE)
                                     strcpy(yylval->tokenval, yytext);
                                     return TYPE;        }
-{LP}                            {   print4Debug("LP");                    
+{LP}                            {   PrintInfo("LP");                    
                                     CREATELEXNODE(LP)
                                     return LP;          }
-{RP}                            {   print4Debug("RP");                    
+{RP}                            {   PrintInfo("RP");                    
                                     CREATELEXNODE(RP)
                                     return RP;          }
-{LB}                            {   print4Debug("LB");                    
+{LB}                            {   PrintInfo("LB");                    
                                     CREATELEXNODE(LB)
                                     return LB;          }
-{RB}                            {   print4Debug("RB");                    
+{RB}                            {   PrintInfo("RB");                    
                                     CREATELEXNODE(RB)
                                     return RB;          }
-{LC}                            {   print4Debug("LC");                    
+{LC}                            {   PrintInfo("LC");                    
                                     CREATELEXNODE(LC)
                                     return LC;          }
-{RC}                            {   print4Debug("RC");                    
+{RC}                            {   PrintInfo("RC");                    
                                     CREATELEXNODE(RC)
                                     return RC;          }
-{FLOAT}                         {   print4Debug("FLOAT");                 
+{FLOAT}                         {   PrintInfo("FLOAT");                 
                                     CREATELEXNODE(FLOAT)
                                     sscanf(yytext, "%lf", &yylval->floatval);
                                     return FLOAT;       }
-{FLOATerror}                    {   print4Debug("FLOATerror");
-                                    printError(); 
-                                    return FLOAT;      }
-{DEC}                           {   print4Debug("INT");                   
+{FLOATerror}                    {   PrintInfo("FLOATerror");
+                                     PrintError("float point number"); 
+                                     return FLOAT;      }
+{DEC}                           {   PrintInfo("INT");                   
                                     CREATELEXNODE(INT)
                                     sscanf(yytext, "%d", &yylval->intval);
                                     return INT;         }
+{OCT}                           {   PrintInfo("INT");                   
+                                    CREATELEXNODE(INT)
+                                    sscanf(yytext, "%o", &yylval->intval);
+                                    return INT;         }
+{HEX}                           {   PrintInfo("INT");                   
+                                    CREATELEXNODE(INT)
+                                    sscanf(yytext, "%i", &yylval->intval);
+                                    return INT;         }
 "\n"                            {   yycolumn=1;         }
+
 {WhiteSpace}+                   {   /*no action*/       }
-{ID}                            {   print4Debug("ID");                    
+{ID}                            {   PrintInfo("ID");                    
                                     CREATELEXNODE(ID)
                                     strcpy(yylval->tokenval, yytext);
                                     return ID;          }
-.                               {   printError();       }
+.                               {   PrintError("character");       }
 
 %%

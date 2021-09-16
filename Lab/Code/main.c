@@ -3,7 +3,6 @@
 
 extern FILE *yyin;
 int yylex();
-extern int yydebug;
 extern int nrSyntaxError, nrLexicalError;
 int yyrestart(FILE *);
 int yyparse();
@@ -20,11 +19,10 @@ int main(int argc, char **argv)
         return 1;
     }
     yyrestart(f);
-    // yydebug=1;
     yyparse();
-#ifdef MDEBUG
-    fprintf(stderr, " LexError:%d, SynError:%d, T:%d\n", nrLexicalError, nrSyntaxError, root);
-#endif
-    if (nrLexicalError == 0 && nrSyntaxError ==0) preOrderTraverse(root, 0);
+    if (nrLexicalError == 0 && nrSyntaxError == 0) 
+        preOrderTraverse(root, 0);
+    // else 
+    //     fprintf(stderr, " LexError:%d, SynError:%d\n", nrLexicalError, nrSyntaxError);
     return 0;
 }
